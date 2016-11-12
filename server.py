@@ -28,8 +28,6 @@ class User(db.Model):
         self.email = email
         self.username = username
         self.password = hash_password(password)
-        app.logger.debug(password)
-        app.logger.debug(hash_password(password))
 
     def check_api_key(self, submitted_key):
         return self.api_key == submitted_key
@@ -44,6 +42,10 @@ def register():
     form_email = request.form['email']
     form_user = request.form['username']
     form_pass = request.form['password']
+
+    app.logger.debug("email: " + form_email)
+    app.logger.debug("username: " + form_user)
+    app.logger.debug("password: " + form_pass)
 
     user_check = User.query.filter_by(username=form_user).first()
     email_check = User.query.filter_by(email=form_email).first()
@@ -125,3 +127,6 @@ def donate_get():
 
 def donate_post():
     return None
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int("5000"), debug=True)
