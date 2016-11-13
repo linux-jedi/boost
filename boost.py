@@ -59,7 +59,7 @@ class Donation(db.Model):
     pid = db.Column(db.Integer, primary_key=True)
     userid = db.Column(db.Integer)
     orgid = db.Column(db.Integer) #Convert into name after
-    amount = db.Column(db.Integer)
+    amount = db.Column(db.Float)
     date = db.Column(db.DateTime)
 
     def __init__(self, userid, orgid, amount):
