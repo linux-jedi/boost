@@ -1,6 +1,10 @@
 from flask import Flask, request, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
 
+from sqlalchemy import desc
+
+from datetime import datetime
+
 import hashlib, json
 from os import urandom
 app = Flask(__name__)
@@ -44,6 +48,20 @@ class Org(db.Model):
         self.short_description = short_description
         self.description = description
         self.icon_url = icon_url
+
+class Donation(db.Model):
+    pid = db.Column(db.Integer, primary_key=True)
+    userid = db.Column(db.Integer)
+    orgid = db.Column(db.Integer) #Convert into name after
+    amount = db.Column(db.Integer)
+    date = db.Column(db.DateTime)
+
+    def __init__(self, userid, orgid, amount):
+        self.userid = userid
+        self.orgid = orgid
+        self.amount = amount
+        self.date = datetime.now()
+
 
 # API Routing
 @app.route('/')
@@ -166,35 +184,49 @@ def organization_put(requet):
 def organization_delete(requset):
     return None
 
-@app.route('/payment', methods=['GET', 'POST', 'PUT', 'DELETE'])
-def payment():
-    return None
+@app.route('/donate/<user>', methods=['GET'])
+def donate(user):
+    user = User.query.filter_by(username=user).first()
 
-# GET, POST, PUT, DELETE Functions for /payment 
-# Make sure to pass request params and session info
-def payment_get():
-    return None
+    if user is None:
+        abort(406)
+    
+    donations = Donation.query.filter_by(userid=user.id).order_by(desc(Donation.date))
 
-def payment_post():
-    return None
+    json_data = []
+    for i, donation in enumerate(donations):
+        json_data.append({
+            'pid': donation.pid,
+            'amount': donation.amount,
+            'date': str(donation.date),
+            'merchant': Org.query.get(donation.orgid).org_name
+        })
+    resp = json.dumps(json_data)
+    return resp
 
-def payment_put():
-    return None
+@app.route('/donate', methods=['POST'])
+def new_donate():
+    form_user = request.form['username']
+    form_orgid = request.form['orgid']
+    form_amount = request.form['amount']
 
-def payment_delete():
-    return None
+    # verify user and orgid exist
+    user_check = User.query.filter_by(username=form_user).first()
+    org_check = Org.query.get(form_orgid)
 
-@app.route('/donate/', methods=['GET', 'POST'])
-def donate():
-    return None
+    if user_check is None or org_check is None:
+        abort(406)
 
-# GET, POST, PUT, DELETE Functions for /payment 
-# Make sure to pass request params and session info
-def donate_get():
-    return None
+    # Get user id
+    userid = User.query.filter_by(username=form_user).first().id
+    new_donation = Donation(userid, form_orgid, form_amount)
 
-def donate_post():
-    return None
+    db.session.add(new_donation)
+    db.session.commit()
+
+    resp = jsonify({'message': 'Success!'})
+    resp.status_code = 201
+    return resp
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int("80"), debug=True)
