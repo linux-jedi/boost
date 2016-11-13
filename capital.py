@@ -53,9 +53,9 @@ def new_purchase(merch_id, account_id, amount):
   payload = {
     "merchant_id": merch_id,
     "medium": "balance",
-    "purchase_date": date.today().isoformat(),
-    "amount": amount,
-    "description": "Boost"
+    "purchase_date": str(date.today().isoformat()),
+    "amount": float(amount),
+    "description": "boost"
   }
 
   response = requests.post(

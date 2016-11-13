@@ -241,6 +241,8 @@ def new_donate():
 
     # Create new purchase
     acc_id = capital.get_account_id(user.cust_id)
+    app.logger.debug("Account ID: " + str(acc_id))
+    app.logger.debug("Merchant ID: " + str(merch_id))
     capital.new_purchase(merch_id, acc_id, form_amount)
 
     db.session.add(new_donation)
