@@ -45,7 +45,7 @@ def get_account_id(customer_id):
   url = 'http://api.reimaginebanking.com/customers/{}/accounts?key={}'.format(customer_id,apiKey)
 
   response = requests.get(url)
-  return response.json()[u'_id']
+  return response.json()[0][u'_id']
 
 def new_purchase(merch_id, account_id, amount):
   url = 'http://api.reimaginebanking.com/accounts/{}/purchases?key={}'.format(account_id,apiKey)
