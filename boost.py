@@ -88,16 +88,14 @@ def login():
     password_hash = hash_password(form_pass)
     user = User.query.filter_by(email=form_email).first()
 
-    app.logger.debug(form_email)
-    app.logger.debug(password_hash)
-    app.logger.debug(user.email)
-    app.logger.debug(str(user.password))
-
     if user is None:
         abort(401)
 
     if str(user.password) != password_hash:
         abort(401)
+
+    app.logger.debug(user.email)
+    app.logger.debug(str(user.password))
     
     # Generate API Key and Update DB
     api_key = generate_api_key()
@@ -186,7 +184,7 @@ def payment_put():
 def payment_delete():
     return None
 
-@app.route('/donate')
+@app.route('/donate/', methods=['GET', 'POST'])
 def donate():
     return None
 
