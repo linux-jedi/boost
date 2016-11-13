@@ -176,7 +176,7 @@ def oraganization_get(org_id):
 
         for i, org in enumerate(organizations):
             if org.merch_id is None:
-                merch_id = capital.new_merchant(org.name)
+                merch_id = capital.new_merchant(org.org_name)
                 org.merch_id = merch_id
                 db.session.commit()
             json_data.append({
