@@ -101,10 +101,10 @@ def register():
 @app.route('/login', methods=['POST'])
 def login():
     # Authenticate username and password
-    form_email = request.form['email']
+    form_user = request.form['username']
     form_pass = request.form['password']
     password_hash = hash_password(form_pass)
-    user = User.query.filter_by(email=form_email).first()
+    user = User.query.filter_by(username=form_user).first()
 
     if user is None:
         abort(401)
@@ -112,7 +112,7 @@ def login():
     if str(user.password) != password_hash:
         abort(401)
 
-    app.logger.debug(user.email)
+    app.logger.debug(user.username)
     app.logger.debug(str(user.password))
     
     # Generate API Key and Update DB
