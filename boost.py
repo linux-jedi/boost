@@ -7,6 +7,8 @@ from datetime import datetime
 
 import hashlib, json
 from os import urandom
+
+import capital
 app = Flask(__name__)
 
 # Set up server connections
