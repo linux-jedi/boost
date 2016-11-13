@@ -3,8 +3,9 @@ import json
 from datetime import date
 
 apiKey = '80caab7e65ab4aa065317a22596e0647'
+base_url = 'http://api.reimaginebanking.com/'
 
-def new_customer(username, email)
+def new_customer(username, email):
   url = 'http://api.reimaginebanking.com/customers?key={}'.format(apiKey)
 
   # Build Request payload
@@ -59,7 +60,35 @@ def new_purchase(merch_id, account_id, amount):
 
   response = requests.post(
     url,
-    date=json.dumps(payload),
+    data=json.dumps(payload),
+    headers={'content-type':'application/json'}
+  )
+  return response.json()[u'objectCreated'][u'_id']
+
+def new_merchant(merch_name):
+  url = 'http://api.reimaginebanking.com/merchants?key={}'.format(apiKey)
+
+  payload = {
+    "name": merch_name,
+    "category": [
+      "Non-Profit"
+    ],
+    "address": {
+      "street_number": "4123",
+      "street_name": "Gunderson Way",
+      "city": "San Franscisco",
+      "state": "CA",
+      "zip": "90023"
+    },
+    "geocode": {
+      "lat": 0,
+      "lng": 0
+    }
+  }
+
+  response = requests.post(
+    url,
+    data=json.dumps(payload),
     headers={'content-type':'application/json'}
   )
   return response.json()[u'objectCreated'][u'_id']

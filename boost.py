@@ -27,11 +27,14 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True)
     password = db.Column(db.String(255))
     api_key = db.Column(db.String(64))
+    cust_id = db.Column(db.String(40))
 
     def __init__(self, email, username, password):
         self.email = email
         self.username = username
         self.password = hash_password(password)
+        self.cust_id = capital.new_customer(username, email)
+        capital.new_account(self.cust_id)
 
     def check_api_key(self, submitted_key):
         return self.api_key == submitted_key
@@ -41,7 +44,8 @@ class Org(db.Model):
     org_name = db.Column(db.String(50), unique=True)
     short_description = db.Column(db.String(250))
     long_description = db.Column(db.Text)
-    icon_url = db.Column(db.String(250))
+    icon_url = db.Column(db.Text)
+    merch_id = db.Column(db.String(40))
 
     def __init__(self, org_name, short_description, description, icon_url):
         self.org_name = org_name
@@ -116,6 +120,10 @@ def login():
     app.logger.debug(str(user.password))
     
     # Generate API Key and Update DB
+    if user.cust_id is None:
+        user.cust_id = capital.new_customer(user.username, user.email)
+        capital.new_account(user.cust_id)
+
     api_key = generate_api_key()
     user.api_key = api_key
     db.session.commit()
@@ -165,6 +173,10 @@ def oraganization_get(org_id):
         json_data = []
 
         for i, org in enumerate(organizations):
+            if org.merch_id is None:
+                merch_id = capital.new_merchant(org.name)
+                org.merch_id = merch_id
+                db.session.commit()
             json_data.append({
                 'id':org.id, 
                 'org_name':org.org_name,
@@ -218,8 +230,16 @@ def new_donate():
         abort(406)
 
     # Get user id
-    userid = User.query.filter_by(username=form_user).first().id
+    user = User.query.filter_by(username=form_user).first()
+    userid = user.id
     new_donation = Donation(userid, form_orgid, form_amount)
+
+    # Get org merch_id
+    merch_id = Org.query.get(form_orgid).merch_id
+
+    # Create new purchase
+    acc_id = capital.get_account_id(user.cust_id)
+    capital.new_purchase(merch_id, acc_id, form_amount)
 
     db.session.add(new_donation)
     db.session.commit()
