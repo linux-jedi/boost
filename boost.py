@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
 
-import hashlib
+import hashlib, json
 from os import urandom
 app = Flask(__name__)
 
@@ -32,6 +32,19 @@ class User(db.Model):
     def check_api_key(self, submitted_key):
         return self.api_key == submitted_key
 
+class Org(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    org_name = db.Column(db.String(50), unique=True)
+    short_description = db.Column(db.String(250))
+    long_description = db.Column(db.Text)
+    icon_url = db.Column(db.String(250))
+
+    def __init__(self, org_name, short_description, description, icon_url):
+        self.org_name = org_name
+        self.short_description = short_description
+        self.description = description
+        self.icon_url = icon_url
+
 # API Routing
 @app.route('/')
 def index():
@@ -59,7 +72,6 @@ def register():
 
     # Return 200 or some HTTP success code
     message = {
-            'status': 201,
             'message': 'Successful',
     }
     resp = jsonify(message)
@@ -94,9 +106,67 @@ def login():
 
     # Return userid and API key to user
     json_data = {'uid':user.id, 'api_key':user.api_key}
-    resp = jsonify(json_data)
+    resp = jsonify(**json_data)
     resp.status_code = 200
     return resp
+
+@app.route('/organization/', defaults={'org_id': None})
+@app.route('/organization/<int:org_id>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def organization(org_id):
+    if request.method == "GET":
+        return oraganization_get(org_id)
+    elif request.method == "POST":
+        return organization_post(request)
+    elif request.method == "PUT":
+        return organization_put(request)
+    else:
+        return organization_delete(request)
+
+def oraganization_get(org_id):
+    # CHeck if org_id has been set
+    if org_id is not None:
+        org = Org.query.filter_by(id = org_id).first()
+
+        if org is None:
+            abort(404)
+
+        json_data = {
+            'id':org.id,
+            'org_name':org.org_name,
+            'short_description':org.short_description,
+            'long_description':org.long_description,
+            'icon_url':org.icon_url
+        }
+        
+        resp = jsonify(**json_data)
+        resp.status_code = 200
+        return resp
+
+    else:
+        # If not set get all
+        organizations = Org.query.order_by(Org.id)
+
+        json_data = []
+
+        for i, org in enumerate(organizations):
+            json_data.append({
+                'id':org.id, 
+                'org_name':org.org_name,
+                'short_description':org.short_description,
+                'long_description':org.long_description,
+                'icon_url':org.icon_url
+                })
+        resp = json.dumps(json_data)
+        return resp
+
+def organization_post(request):
+    return None
+
+def organization_put(requet):
+    return None
+
+def organization_delete(requset):
+    return None
 
 @app.route('/payment', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def payment():
